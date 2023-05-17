@@ -12,6 +12,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+process_history = [0, 0, 0]
 
 # Define a few command handlers. These usually take the two arguments update and
 # context.
@@ -31,7 +32,6 @@ async def gpustatus(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     nvidia_smi_processes = subprocess.check_output(["nvidia-smi", "--query-compute-apps=pid,used_memory", "--format=csv,noheader,nounits"])
     processes = nvidia_smi_processes.decode("UTF-8")
     processes = processes.split(",")
-    
     # Get the username of the user running the process
     username = subprocess.check_output(["ps", "-o", "user=", "-p", processes[0]])
     gpu_status = nvidia_smi_output.decode("UTF-8")
@@ -53,17 +53,39 @@ async def periodic_gpustatus(context: ContextTypes.DEFAULT_TYPE):
     # Get the processes running on the GPU
     nvidia_smi_processes = subprocess.check_output(["nvidia-smi", "--query-compute-apps=pid,used_memory", "--format=csv,noheader,nounits"])
     processes = nvidia_smi_processes.decode("UTF-8")
-    processes = processes.split(",")
-    
-    # Get the username of the user running the process
-    username = subprocess.check_output(["ps", "-o", "user=", "-p", processes[0]])
+    processes = processes.split("\n")
+    # Loop over the process and split them by ,
+    for i in range(len(processes)):
+        processes[i] = processes[i].split(",")
+    # Remove the last element of the list
+    processes.pop()
+    # Loop through the processes and get the usernames
+    usernames = []
+    for process in processes:
+        username = subprocess.check_output(["ps", "-o", "user=", "-p", process[0]])
+        usernames.append(username.decode("UTF-8"))
+        # Remove newlines from the username
+        usernames[-1] = usernames[-1].replace("\n", "")
     gpu_status = nvidia_smi_output.decode("UTF-8")
     # Split the output into a list divided by ,
     gpu_status = gpu_status.split(",")
     # Format the output
     message = f"Total Memory: {int(gpu_status[1])}MB\nUsed Memory: {int(gpu_status[2])}MB\nFree Memory: {int(gpu_status[3])}MB\n"
-    gpu_user = f"User: {username.decode('UTF-8')}\n"
-    message = message + gpu_user
+    message = message + "\nUsers:\n"
+    for i in range(len(processes)):
+        # Remove spaces from the username and the memory usage
+        processes[i][1] = processes[i][1].replace(" ", "")
+        gpu_user = f"User: {usernames[i]} -> {processes[i][1]}MB\n"
+        message = message + gpu_user
+    message = message + "\n"
+    # Check if the GPU is now beiung used
+    if (process_history[0] == 0) and (process_history[1] == 0) and (len(processes) != 0):
+        message = message + "GPU is now being used\n"
+    if (process_history[0] != 0) and (process_history[1] != 0) and (len(processes) == 0):
+        message = message + "GPU is no longer being used\n"
+    process_history[2] = process_history[1]
+    process_history[1] = process_history[0]
+    process_history[0] = len(processes)
     if float(gpu_status[2]) > float(gpu_status[1])/10:
         message = message + "WARNING: GPU is being used"
     else:
@@ -91,21 +113,6 @@ def is_gpu_used():
     else:
         return False
     
-# async def periodic_gpu_check(context: ContextTypes.DEFAULT_TYPE):
-#     # Get the GPU status
-#     current_gpu_status = is_gpu_used()
-#     if current_gpu_status == True and gpu_status[1] == False and gpu_status[2] == False:
-#         awaits = await gpustatus(context)
-#         temp = gpu_status[0]
-#         gpu_status[0] = current_gpu_status
-#         gpu_status[2] = gpu_status[1]
-#         gpu_status[1] = temp
-#     elif current_gpu_status == False and gpu_status[1] == True and gpu_status[2] == True:
-#         awaits = await gpustatus(context)
-#         temp = gpu_status[0]
-#         gpu_status[0] = current_gpu_status
-#         gpu_status[2] = gpu_status[1]
-#         gpu_status[1] = temp    
     
 def main() -> None:
     """Start the bot."""
