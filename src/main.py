@@ -49,13 +49,14 @@ async def gpustatus(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     gpu_status = gpu_status.split(",")
     # Format the output
     message = f"Total Memory: {int(gpu_status[1])}MB\nUsed Memory: {int(gpu_status[2])}MB\nFree Memory: {int(gpu_status[3])}MB\n"
-    message = message + "\nUsers:\n"
-    for i in range(len(processes)):
-        # Remove spaces from the username and the memory usage
-        processes[i][1] = processes[i][1].replace(" ", "")
-        gpu_user = f"User: {usernames[i]} -> {processes[i][1]}MB\n"
-        message = message + gpu_user
-    message = message + "\n"
+    if len(processes) != 0:
+        message = message + "\nUsers:\n"
+        for i in range(len(processes)):
+            # Remove spaces from the username and the memory usage
+            processes[i][1] = processes[i][1].replace(" ", "")
+            gpu_user = f"User: {usernames[i]} -> {processes[i][1]}MB\n"
+            message = message + gpu_user
+        message = message + "\n"
     if len(processes) != 0:
         message = message + "WARNING: GPU is being used"
     else:
