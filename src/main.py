@@ -87,20 +87,23 @@ async def periodic_gpustatus(context: ContextTypes.DEFAULT_TYPE):
     gpu_status = gpu_status.split(",")
     # Format the output
     message = f"Total Memory: {int(gpu_status[1])}MB\nUsed Memory: {int(gpu_status[2])}MB\nFree Memory: {int(gpu_status[3])}MB\n"
-    message = message + "\nUsers:\n"
-    for i in range(len(processes)):
-        # Remove spaces from the username and the memory usage
-        processes[i][1] = processes[i][1].replace(" ", "")
-        gpu_user = f"User: {usernames[i]} -> {processes[i][1]}MB\n"
-        message = message + gpu_user
-    message = message + "\n"
+    if len(processes) != 0:
+        for i in range(len(processes)):
+            message = message + "\nUsers:\n"
+            # Remove spaces from the username and the memory usage
+            processes[i][1] = processes[i][1].replace(" ", "")
+            gpu_user = f"User: {usernames[i]} -> {processes[i][1]}MB\n"
+            message = message + gpu_user
+        message = message + "\n"
     # Check if the GPU is now beiung used
     print_message = False
-    if (process_history[0] == 0) and (process_history[1] == 0) and (len(processes) != 0):
+    if (process_history[0] != 0) and (process_history[1] == 0) and (len(processes) != 0):
         message = message + "GPU is now being used\n"
         print_message = True
-    if (process_history[0] != 0) and (process_history[1] != 0) and (len(processes) == 0):
-        message = "GPU is no longer being used\n"
+    if (process_history[0] == 0) and (process_history[1] != 0) and (len(processes) == 0):
+        message = message + "GPU is no longer being used\n"
+        print_message = True
+    print(process_history)
     process_history[2] = process_history[1]
     process_history[1] = process_history[0]
     process_history[0] = len(processes)
@@ -151,7 +154,7 @@ def main() -> None:
     
     job_queue = application.job_queue
     # Add a periodic function to check the GPU status
-    periodic_task = job_queue.run_repeating(periodic_gpustatus, interval=300, first=0) 
+    periodic_task = job_queue.run_repeating(periodic_gpustatus, interval=600, first=0) 
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling()
