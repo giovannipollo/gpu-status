@@ -25,7 +25,7 @@ pip install -r requirements.txt
 ```
 Run the bot by running the following command:
 ```bash
-python3 bot.py
+python3 main.py
 ```
 
 # Logic
@@ -42,4 +42,4 @@ User: username -> used_memory MB
 WARNING: GPU is being used
 ```
 
-In addition to that the bot pools the GPU status every 5 minutes and buffers the last 3 checks. If the last 2 checks differs from the current check, the bot will send a message to the group to warn the users that the GPU status has changed. This is very useful to notify the users both that the GPU has become free or that it has been taken by someone. 
+In addition to that the bot pools the GPU status every 10 minutes and buffers the last 3 checks. If the last 2 checks differs from the current check, the bot will send a message to the group to warn the users that the GPU status has changed. This is very useful to notify the users both that the GPU has become free or that it has been taken by someone. 
