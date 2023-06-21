@@ -97,10 +97,10 @@ async def periodic_gpustatus(context: ContextTypes.DEFAULT_TYPE):
         message = message + "\n"
     # Check if the GPU is now beiung used
     print_message = False
-    if (process_history[0] != 0) and (process_history[1] == 0) and (len(processes) != 0):
+    if (process_history[0] != 0) and (process_history[1] == 0) and (process_history[2] == 0) and (len(processes) != 0):
         message = message + "GPU is now being used\n"
         print_message = True
-    if (process_history[0] == 0) and (process_history[1] != 0) and (len(processes) == 0):
+    if (process_history[0] == 0) and (process_history[1] != 0) and (process_history[2] != 0) and (len(processes) == 0):
         message = message + "GPU is no longer being used\n"
         print_message = True
     print(process_history)
